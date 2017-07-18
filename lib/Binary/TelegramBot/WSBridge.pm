@@ -1,12 +1,16 @@
 package Binary::TelegramBot::WSBridge;
 
 use Mojo::UserAgent;
-use Exporter qw(import);
-use Binary::TelegramBot::SendMessage;
 use JSON qw(encode_json decode_json);
+use Binary::TelegramBot::WSResponseHandler qw(send_ws_response);
+
+use Exporter qw(import);
 use Data::Dumper;
 
-our @EXPORT = qw(send_ws_request authorize is_authenticated);
+# To do use Mojolicious stash for storing all the values.
+
+our @EXPORT = qw(send_ws_request authorize is_authenticated get_currency);
+
 my $app_id = "6660";
 my $ws_url = "wss://ws.binaryws.com/websockets/v3?app_id=$app_id";
 my $ua     = Mojo::UserAgent->new;
@@ -41,11 +45,11 @@ sub on_msg {
     return if !$msg;
     my $resp_obj = decode_json($msg);
     if ($resp_obj->{passthrough}->{reauthorizing} != 1) {
-        Binary::TelegramBot::SendMessage::send_ws_response($msg, $chat_id);
+        send_ws_response($msg, $chat_id);
     }
 
     if ($resp_obj->{msg_type} eq "authorize" && !$resp_obj->{error}) {
-        $tx_hash->{$chat_id}->{authorized} = 1;
+        update_state($resp_obj, $chat_id);
     }
 
     send_queued_requests($chat_id);
@@ -55,7 +59,6 @@ sub authorize {
     my ($chat_id, $token) = @_;
     my $req = {authorize => $token};
     $req->{passthrough} = {reauthorizing => 1} if $tx_hash->{$chat_id}->{token};
-    $tx_hash->{$chat_id}->{token} = $token;
 
     if (!$tx_hash->{$chat_id}->{tx}) {
         push @$queued_requests,
@@ -69,6 +72,14 @@ sub authorize {
         my $tx = $tx_hash->{$chat_id}->{tx};
         $tx->send(encode_json($req));
     }
+}
+
+#It pretty much just updates the state
+sub update_state {
+    my ($resp, $chat_id) = @_;
+    $tx_hash->{$chat_id}->{authorized} = 1;
+    $tx_hash->{$chat_id}->{token}      = $resp->{echo_req}->{authorize};
+    $tx_hash->{$chat_id}->{authorize}  = $resp->{authorize};
 }
 
 # Create a ws connection for every chat session.
@@ -119,6 +130,11 @@ sub is_authenticated {
     my $chat_id = shift;
     my $token = $tx_hash->{$chat_id}->{token} ? 1 : 0;
     return $token;
+}
+
+sub get_currency {
+    my $chat_id = shift;
+    return $tx_hash->{$chat_id}->{authorize}->{currency};
 }
 
 1;

@@ -1,14 +1,15 @@
 use Data::Dumper;
-use Binary::TelegramBot::SendMessage;
-use Binary::TelegramBot::GetUpdates;
-use Binary::TelegramBot::WSBridge;
+use Binary::TelegramBot::GetUpdates qw(get_periodic_updates);
+use Binary::TelegramBot::TelegramCommandHandler qw(process_message);
 
 sub start_bot {
     get_periodic_updates(
         sub {
             my $messages = shift;
             foreach (@$messages) {
-                send_message($_->{message}->{text}, $_->{message}->{chat}->{id});
+                my $msg = $_->{callback_query}->{data} || $_->{message}->{text};
+                my $chat_id = $_->{callback_query}->{message}->{chat}->{id} || $_->{message}->{chat}->{id};
+                process_message($chat_id, $msg);
             }
         });
 }

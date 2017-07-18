@@ -16,6 +16,7 @@ my $update_url         = "https://api.telegram.org/bot$token/getUpdates";
 my $ua                 = Mojo::UserAgent->new;
 my $processed_messages = {};
 my $last_update_id     = undef;
+
 $ua = $ua->inactivity_timeout(0);
 
 sub get_updates {
@@ -46,9 +47,9 @@ sub get_periodic_updates {
         return;
     }
     Mojo::IOLoop->recurring(
-        1 => sub {
+        0.5 => sub {
             my $messages = get_updates();
-            $callback->($messages) if ($messages && scalar @{$messages});
+            $callback->($messages) if ($messages && scalar @$messages);
         });
 
     Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
