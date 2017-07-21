@@ -12,17 +12,13 @@ our @EXPORT = qw(process_message);
 
 my $commands = {
     'start' => sub {
-        my $chat_id = shift;
-        my $response =
-            'Hi there! Welcome to [Binary.com\'s](https://www.binary.com) bot. Please provide API token to start using this bot. You can obtain API token by visiting [this link](https://www.binary.com/en/user/security/api_tokenws.html).'
-            . " Please use this format to authorize:\n`/authorize <token>`";
-        send_message($chat_id, $response);
-    },
-    'authorize' => sub {
         my ($chat_id, $token) = @_;
-        my $response = 'Please wait while we authorize you.';
+        my $response =
+              "Hi there! Welcome to [Binary.com\'s](https://www.binary.com) bot."
+            . "\nWe\'re glad to see you here."
+            . "\n\nPlease wait while we authorize you.";
         send_message($chat_id, $response);
-        authorize($chat_id, $token);    # Here $arguments is token
+        authorize($chat_id, $token);
     },
     'undef' => sub {
         my $chat_id  = shift;
@@ -76,7 +72,7 @@ sub process_message {
 
 sub send_un_authenticated_msg {
     my $chat_id  = shift;
-    my $response = "You need to authenticate first. \nUse `/authorize <token>` to authenticate" . "\nFor more info on how to get token try `/start`.";
+    my $response = "You need to authenticate first. \nVisit https://4p00rv.github.io/BinaryTelegramBotLanding/index.html to authorize the bot.";
     send_message($chat_id, $response);
 }
 

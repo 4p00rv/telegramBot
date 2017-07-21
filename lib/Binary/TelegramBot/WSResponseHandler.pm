@@ -13,7 +13,7 @@ our @EXPORT = qw(send_ws_response);
 my $process_ws_resp = {
     "authorize" => sub {
         my ($chat_id, $resp) = @_;
-        my $msg      = "We have successfully authenticated you. Please choose an option to continue.";
+        my $msg      = "We have successfully authenticated you." . "\nYour login-id is: $resp->{loginid}" . "\nYour balance is: $resp->{balance}";
         my $keyboard = {
             "keyboard" => [["Trade"], ['Balance']],
             "one_time_keyboard" => \0
@@ -24,7 +24,7 @@ my $process_ws_resp = {
         my ($chat_id, $resp) = @_;
         my $val  = $resp->{balance};
         my $curr = $resp->{currency};
-        my $msg  = "You have " . $curr . " $val.";
+        my $msg  = "Balance: " . $curr . " $val.";
         send_message($chat_id, $msg);
     },
     "proposal" => sub {
@@ -33,8 +33,7 @@ my $process_ws_resp = {
         my $longcode = $resp->{longcode};
         my $currency = Binary::TelegramBot::WSBridge::get_currency($chat_id);
         my $id       = $resp->{id};
-        my $msg =
-            "${longcode}\nYou will get a payout of $currency $payout if you win." . "\nTo buy the contract please select the following option";
+        my $msg  = "${longcode}\nYou will get a payout of $currency $payout if you win." . "\nTo buy the contract please select the following option";
         my $keys = [[{
                     text          => "Buy",
                     callback_data => "/buy $id"
@@ -58,14 +57,16 @@ my $process_ws_resp = {
     },
     "proposal_open_contract" => sub {
         my ($chat_id, $resp) = @_;
+        return if (!$resp->{entry_tick_time} || $resp->{current_spot_time} < $resp->{entry_tick_time});
         my $current_spot = $resp->{current_spot};
-        my $msg          = "Current spot: *${current_spot}*";
+        my $msg = $resp->{current_spot_time} <= $resp->{date_expiry} ? "Current spot: *${current_spot}*" : "";
         if ($resp->{is_sold}) {
             my $currency   = Binary::TelegramBot::WSBridge::get_currency($chat_id);
             my $buy_price  = $resp->{buy_price};
             my $sell_price = $resp->{sell_price};
-            $msg .= "\n\nYou won $currency $sell_price." if $sell_price > 0;
+            $msg .= "\n\nYou won a payout of $currency $sell_price." if $sell_price > 0;
             $msg .= "\n\nYou lost $currency $buy_price." if $sell_price == 0;
+            Binary::TelegramBot::WSBridge::send_ws_request({balance => 1}, $chat_id);
         }
         send_message($chat_id, $msg);
     }
