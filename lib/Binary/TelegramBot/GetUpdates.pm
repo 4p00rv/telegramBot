@@ -46,6 +46,11 @@ sub get_periodic_updates {
     if (!$callback) {
         return;
     }
+    # while (1) {
+    #     my $messages = get_updates();
+    #     $callback->($messages) if ($messages && scalar @$messages);
+    #     sleep(1);
+    # }
     Mojo::IOLoop->recurring(
         1 => sub {
             my $messages = get_updates();
