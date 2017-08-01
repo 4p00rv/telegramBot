@@ -28,7 +28,7 @@ To Do:
 - Implement StateManager.pm, maybe try Redis?
 - Better error handling. Maybe create a separate module just for error handling?
 - Retries on error in SendMessage.pm & WSBridge.pm.
-- Use webhooks to get messages.
+- ~~Use webhooks to get messages.~~
 - Implement a queue for sending requests to the telegram API.
 - Add tests.
 

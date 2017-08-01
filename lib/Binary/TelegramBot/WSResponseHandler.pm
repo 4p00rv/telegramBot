@@ -61,7 +61,8 @@ my $process_ws_resp = {
         my ($chat_id, $resp) = @_;
         my $currency    = get_property($chat_id, "currency");
         my $buy_price   = $resp->{buy_price};
-        my $msg         = "Succesfully bought contract at $currency $buy_price.";
+        my $balance     = $resp->{balance_after};
+        my $msg         = "Succesfully bought contract at $currency $buy_price.\nYour new balance: $currency $balance";
 
         return {
             chat_id => $chat_id,

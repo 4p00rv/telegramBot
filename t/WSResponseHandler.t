@@ -78,13 +78,16 @@ sub buy {
         buy   => $id,
         price => 100
     };
-    my $future   = send_ws_request($creds->{chat_id}, $req);
-    my $response = await_response($future);
-    my $reply    = forward_ws_response($creds->{chat_id}, $response);
-    my $buy      = decode_json($response)->{buy};
-
+    my $future         = send_ws_request($creds->{chat_id}, $req);
+    my $response       = await_response($future);
+    my $reply          = forward_ws_response($creds->{chat_id}, $response);
+    my $buy            = decode_json($response)->{buy};
+    my $currency       = get_property($creds->{chat_id}, "currency");
+    my $buy_price      = $buy->{buy_price};
+    my $balance        = $buy->{balance_after};
+    my $expected_reply = "Succesfully bought contract at $currency $buy_price.\nYour new balance: $currency $balance";
     # Check if buy request was successful
-    ok(index($reply->{text}, "Succesfully bought contract at") != -1)
+    ok($reply->{text} eq $expected_reply)
         or diag "Buy request failed";
 
     return $buy->{contract_id};
@@ -121,7 +124,7 @@ sub proposal_open_contract {
     ok(index($reply->{text}, "You won a payout of USD 10") != -1) or diag "proposal_open_contract: Wrong message for sold contracts";
     $response->{proposal_open_contract}->{sell_price} = 0;
     $reply = forward_ws_response($creds->{chat_id}, encode_json($response));
-    ok(index($reply->{text}, "You lost USD 5.15") != -1) or diag "proposal_open_contract: Wrong message for sold contracts";    
+    ok(index($reply->{text}, "You lost USD 5.15") != -1) or diag "proposal_open_contract: Wrong message for sold contracts";
 }
 
 start();
