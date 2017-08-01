@@ -1,2 +1,3 @@
 bin/hypnotoad.pid
 bin/*.log
+curl.cmd
