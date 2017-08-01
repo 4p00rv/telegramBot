@@ -1,21 +1,21 @@
 use Data::Dumper;
 use Mojolicious::Lite;
+use Mojo::Log;
 
 app->config(hypnotoad => {listen => ['http://*:3000']});
+my $log = Mojo::Log->new(
+    path  => 'bin/mojo.log',
+    level => 'warn'
+);
 
 sub listener {
-    get '/telegram' => sub {
+    any '/telegram' => sub {
         my $self = shift;
-        my $req = $self->req;
-        print Dumper($req->content) . "\n";
-        $self->render( text => "Ok");
+        my $req  = $self->req;
+        $log->warn(Dumper($req));
+        $self->render(text => "Ok");
     };
-    get '/' => sub {
-        my $self = shift;
-        my $req = $self->req;
-        print Dumper($req->content) . "\n";
-        $self->render( text => "Ok");
-    };
+
     app->start;
 }
 
